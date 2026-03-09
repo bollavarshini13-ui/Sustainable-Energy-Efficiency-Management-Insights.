@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!--
+  CO1: HTML document structure, HTTP/HTTPS (external fonts via HTTPS), web client-server architecture
+  CO2: Semantic tags (header, nav, main, section, footer), accessibility attributes (aria-label, role),
+       media tags, forms & input handling, Bootstrap-like layout
+  CO5: SEO meta tags, CORS awareness (Google Fonts loaded via HTTPS), responsive meta viewport
+-->
+<html lang="en">
+<head>
+  <!-- CO5: Meta tags for SEO-friendly pages -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EcoTrack — Track your energy-saving habits and reduce your CO₂ footprint.">
+  <meta name="keywords" content="eco, energy saving, CO2, sustainability, green living">
+  <meta name="author" content="EcoTrack">
+  <!-- Open Graph for social sharing (CO5: SEO/meta) -->
+  <meta property="og:title" content="EcoTrack — Energy Saving Dashboard">
+  <meta property="og:description" content="Track energy-saving tips and reduce your carbon footprint.">
+  <meta property="og:type" content="website">
+
+  <title>EcoTrack — Energy Saving Dashboard</title>
+
+  <!-- CO1: HTTPS protocol — external resource loaded over secure connection (CORS context: CO5) -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- CO1: Linking external CSS file (foundational web architecture) -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- CO2: Semantic <header> tag replacing generic div -->
+<div class="app" role="main" aria-label="EcoTrack Application">
+
+  <!-- CO2: Semantic header with aria-label for accessibility -->
+  <header aria-label="EcoTrack site header">
+    <div class="logo" role="banner">
+      <div class="logo-dot" aria-hidden="true"></div>
+      <!-- CO1: Heading element -->
+      <span>EcoTrack</span>
+    </div>
+    <div class="header-right">
+      <!-- CO2: Accessibility — aria-live for dynamic streak updates -->
+      <div class="streak-badge" aria-live="polite" aria-label="Current streak in days">
+        🔥 <span id="streakDays">0</span> day streak
+      </div>
+      <div class="co2-saved" aria-live="polite" aria-label="Total CO2 saved in kilograms">
+        🌿 <span id="co2Display">0</span> kg CO₂ saved
+      </div>
+    </div>
+  </header>
+
+  <!-- CO2: Search form using semantic <form> and <input> with attributes -->
+  <!-- CO2: Forms & Input Handling — type, placeholder, autocomplete, aria-label -->
+  <section aria-label="Search tips">
+    <form class="search-bar" role="search" onsubmit="return false;">
+      <label for="searchInput" class="visually-hidden">Search energy-saving tips</label>
+      <span class="search-icon" aria-hidden="true">🔍</span>
+      <input
+        type="search"
+        id="searchInput"
+        name="search"
+        placeholder="Search all tips..."
+        autocomplete="off"
+        aria-label="Search all energy-saving tips"
+        spellcheck="false"
+      />
+      <!-- CO2: aria-live for dynamic result count -->
+      <span class="search-results-count" id="searchCount" aria-live="polite" aria-atomic="true"></span>
+    </form>
+  </section>
+
+  <!-- CO2: Semantic <section> for statistics -->
+  <section class="stats-bar" aria-label="Progress statistics">
+    <article class="stat-card" aria-label="Tips completed">
+      <div class="num" id="completedCount">0</div>
+      <div class="lbl">Tips Completed</div>
+    </article>
+    <article class="stat-card accent" aria-label="Categories completed">
+      <div class="num" id="categoriesCount">0</div>
+      <div class="lbl">Categories Done</div>
+    </article>
+    <article class="stat-card gold" aria-label="Overall progress percentage">
+      <div class="num" id="progressPct">0%</div>
+      <div class="lbl">Overall Progress</div>
+    </article>
+    <article class="stat-card warn" aria-label="Impact score">
+      <div class="num" id="impactScore">0</div>
+      <div class="lbl">Impact Score</div>
+    </article>
+  </section>
+
+  <!-- CO2: Semantic <main> for primary content -->
+  <main class="main">
+
+    <!-- CO2: <nav> for category navigation (semantic tag) -->
+    <nav class="category-nav" id="catNav" aria-label="Tip categories"></nav>
+
+    <!-- CO2: <section> for tips panel -->
+    <section class="tips-panel" aria-label="Energy saving tips">
+
+      <!-- CO2: Tab row using button elements with role -->
+      <div class="tab-row" role="tablist" aria-label="View tabs">
+        <button class="tab active" role="tab" aria-selected="true"  onclick="setTab('browse', event)">Browse</button>
+        <button class="tab" role="tab" aria-selected="false" onclick="setTab('favorites', event)">⭐ Favourites</button>
+        <button class="tab" role="tab" aria-selected="false" onclick="setTab('completed', event)">✅ Completed</button>
+      </div>
+
+      <!-- CO1: Paragraph / text content with accessible label -->
+      <div class="progress-wrap" aria-label="Overall progress bar">
+        <span class="progress-text">All tips</span>
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBarWrap">
+          <div class="progress-fill" id="progressBar" style="width:0%"></div>
+        </div>
+        <span class="progress-label" id="progressLabel" aria-live="polite">0 / 0</span>
+        <button class="btn-sm" onclick="exportData()" aria-label="Export your progress to a text file">⬇ Export</button>
+        <button class="btn-sm primary" onclick="shareProgress()" aria-label="Share your progress">Share</button>
+      </div>
+
+      <!-- CO2: aria-live region for tips list (dynamic content) -->
+      <div id="tipsContainer" aria-live="polite" aria-label="Tips list">
+        <!-- CO2: Semantic empty state with figure-like structure -->
+        <div class="empty-state" role="status">
+          <span class="big-icon" aria-hidden="true">🌍</span>
+          <!-- CO1: Heading -->
+          <h3>Select a category</h3>
+          <!-- CO1: Paragraph -->
+          <p>Pick a topic on the left to explore energy-saving tips</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- CO2: Semantic <footer> -->
+  <footer aria-label="EcoTrack footer">
+    <p>EcoTrack &mdash; Making the world greener, one tip at a time. 🌱</p>
+  </footer>
+</div>
+
+<!-- CO2: Accessible toast notification -->
+<div class="toast" id="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+<!-- Celebration modal — CO2: accessibility with role="dialog" -->
+<div class="celebration" id="celebration" role="dialog" aria-modal="true" aria-labelledby="celebTitle">
+  <div class="celebration-box">
+    <span class="big" aria-hidden="true">🎉</span>
+    <!-- CO1: Heading inside modal -->
+    <h2 id="celebTitle">Category Complete!</h2>
+    <p id="celebMsg">You've completed all tips in this category.</p>
+    <button class="close-celebration" onclick="closeCelebration()" aria-label="Close celebration and continue">
+      Awesome! Keep going →
+    </button>
+  </div>
+</div>
+
+<!-- CO2: <canvas> media element for confetti animation -->
+<canvas id="confettiCanvas" aria-hidden="true"></canvas>
+
+<!-- CO1: External JS file linked at bottom of body (best practice for page load) -->
+<!-- CO5: ES6 module type for module-based JS (ES6 modules) -->
+<script src="script.js" defer></script>
+</body>
+</html>

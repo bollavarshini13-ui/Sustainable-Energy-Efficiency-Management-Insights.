@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoTrack — Energy Saving Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --green: #39d353;
+      --green-dim: #196127;
+      --green-glow: rgba(57, 211, 83, 0.15);
+      --text: #e6edf3;
+      --text-muted: #7d8590;
+      --accent: #58a6ff;
+      --warn: #f78166;
+      --gold: #ffa657;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      max-width: 960px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-dot {
+      width: 10px; height: 10px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 12px var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .streak-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 166, 87, 0.1);
+      border: 1px solid rgba(255, 166, 87, 0.3);
+      color: var(--gold);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .co2-saved {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-glow);
+      border: 1px solid var(--green-dim);
+      color: var(--green);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Search */
+    .search-bar {
+      position: relative;
+    }
+
+    .search-bar input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px 14px 48px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-bar input::placeholder { color: var(--text-muted); }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      pointer-events: none;
+    }
+
+    .search-results-count {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      text-align: center;
+    }
+
+    .stat-card .num {
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .stat-card .lbl {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-card.accent .num { color: var(--accent); }
+    .stat-card.gold .num { color: var(--gold); }
+    .stat-card.warn .num { color: var(--warn); }
+
+    /* Main layout */
+    .main {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 20px;
+    }
+
+    /* Category nav */
+    .category-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cat-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      width: 100%;
+      position: relative;
+    }
+
+    .cat-btn:hover {
+      background: var(--surface2);
+      color: var(--text);
+      border-color: #444c56;
+    }
+
+    .cat-btn.active {
+      background: var(--green-glow);
+      border-color: var(--green-dim);
+      color: var(--green);
+    }
+
+    .cat-btn .cat-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+    .cat-btn .badge {
+      margin-left: auto;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--text-muted);
+    }
+
+    .cat-btn.active .badge {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .cat-btn.completed::after {
+      content: '✓';
+      position: absolute;
+      right: 10px;
+      color: var(--green);
+      font-size: 0.8rem;
+    }
+
+    /* Tips panel */
+    .tips-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .panel-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-sm {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 14px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-sm:hover { color: var(--text); border-color: #444; }
+    .btn-sm.primary { background: var(--green-glow); border-color: var(--green-dim); color: var(--green); }
+    .btn-sm.primary:hover { background: rgba(57,211,83,0.25); }
+
+    .tip-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      transition: all 0.2s;
+      animation: slideIn 0.3s ease both;
+      cursor: pointer;
+    }
+
+    .tip-card:hover {
+      border-color: #444c56;
+      transform: translateX(4px);
+    }
+
+    .tip-card.done {
+      border-color: var(--green-dim);
+      background: var(--green-glow);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .tip-card:nth-child(1) { animation-delay: 0.05s; }
+    .tip-card:nth-child(2) { animation-delay: 0.1s; }
+    .tip-card:nth-child(3) { animation-delay: 0.15s; }
+    .tip-card:nth-child(4) { animation-delay: 0.2s; }
+
+    .tip-icon-wrap {
+      width: 44px; height: 44px;
+      background: var(--surface2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .tip-card.done .tip-icon-wrap { background: var(--green-dim); }
+
+    .tip-body { flex: 1; }
+
+    .tip-text {
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 0.93rem;
+    }
+
+    .tip-card.done .tip-text { color: var(--text-muted); text-decoration: line-through; }
+
+    .tip-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .impact-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 6px;
+      padding: 3px 9px;
+      font-size: 0.73rem;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+    }
+
+    .impact-high { background: rgba(247,129,102,0.15); color: var(--warn); border: 1px solid rgba(247,129,102,0.3); }
+    .impact-med { background: rgba(255,166,87,0.15); color: var(--gold); border: 1px solid rgba(255,166,87,0.3); }
+    .impact-low { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+
+    .co2-tag {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .tip-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .complete-btn {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .complete-btn:hover {
+      background: var(--green-glow);
+      border-color: var(--green);
+      color: var(--green);
+      transform: scale(1.04);
+    }
+
+    .tip-card.done .complete-btn {
+      background: var(--green);
+      border-color: var(--green);
+      color: #0d1117;
+      font-weight: 700;
+    }
+
+    .tip-card.done .complete-btn:hover {
+      background: #2cb545;
+      color: #0d1117;
+    }
+
+    .undo-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      text-decoration: underline;
+      padding: 0;
+      transition: color 0.2s;
+    }
+
+    .undo-btn:hover { color: var(--warn); }
+
+    /* Complete All button */
+    .complete-all-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      gap: 12px;
+    }
+
+    .complete-all-bar span {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .complete-all-btn {
+      background: var(--green-glow);
+      border: 1.5px solid var(--green-dim);
+      border-radius: 8px;
+      padding: 8px 18px;
+      color: var(--green);
+      font-size: 0.85rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .complete-all-btn:hover {
+      background: rgba(57,211,83,0.25);
+      transform: scale(1.03);
+    }
+
+    .reset-cat-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reset-cat-btn:hover { border-color: var(--warn); color: var(--warn); }
+
+    /* Celebration overlay */
+    .celebration {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .celebration.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .celebration-box {
+      background: var(--surface);
+      border: 1px solid var(--green-dim);
+      border-radius: 20px;
+      padding: 48px 56px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(57,211,83,0.3);
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .celebration-box .big { font-size: 3.5rem; display: block; margin-bottom: 12px; }
+    .celebration-box h2 { font-family: 'Space Mono', monospace; color: var(--green); font-size: 1.4rem; margin-bottom: 8px; }
+    .celebration-box p { color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem; }
+
+    .close-celebration {
+      background: var(--green);
+      border: none;
+      border-radius: 10px;
+      padding: 12px 28px;
+      color: #0d1117;
+      font-weight: 700;
+      font-size: 0.95rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .close-celebration:hover { background: #2cb545; }
+
+    /* Confetti canvas */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 199;
+    }
+
+    /* Empty state */
+    .empty-state {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 60px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .empty-state .big-icon { font-size: 3rem; display: block; margin-bottom: 16px; }
+    .empty-state h3 { color: var(--text); margin-bottom: 8px; font-family: 'Space Mono', monospace; }
+
+    /* Progress bar */
+    .progress-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .progress-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--green);
+      white-space: nowrap;
+    }
+
+    .progress-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--surface);
+      border: 1px solid var(--green-dim);
+      color: var(--green);
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-family: 'Space Mono', monospace;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 100;
+      box-shadow: 0 0 20px rgba(57, 211, 83, 0.2);
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* Favourites tab */
+    .tab-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 18px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab.active { background: var(--green-glow); border-color: var(--green-dim); color: var(--green); }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .main { grid-template-columns: 1fr; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .category-nav { flex-direction: row; flex-wrap: wrap; }
+      .cat-btn { width: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      EcoTrack
+    </div>
+    <div class="header-right">
+      <div class="streak-badge">🔥 <span id="streakDays">0</span> day streak</div>
+      <div class="co2-saved">🌿 <span id="co2Display">0</span> kg CO₂ saved</div>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search all tips..." autocomplete="off" />
+    <span class="search-results-count" id="searchCount"></span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="num" id="completedCount">0</div>
+      <div class="lbl">Tips Completed</div>
+    </div>
+    <div class="stat-card accent">
+      <div class="num" id="categoriesCount">0</div>
+      <div class="lbl">Categories Done</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="num" id="progressPct">0%</div>
+      <div class="lbl">Overall Progress</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="num" id="impactScore">0</div>
+      <div class="lbl">Impact Score</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Nav -->
+    <div class="category-nav" id="catNav"></div>
+
+    <!-- Tips panel -->
+    <div class="tips-panel">
+      <div class="tab-row">
+        <button class="tab active" onclick="setTab('browse')">Browse</button>
+        <button class="tab" onclick="setTab('favorites')">⭐ Favourites</button>
+        <button class="tab" onclick="setTab('completed')">✅ Completed</button>
+      </div>
+
+      <div class="progress-wrap">
+        <span class="progress-text">All tips</span>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressBar" style="width:0%"></div>
+        </div>
+        <span class="progress-label" id="progressLabel">0 / 0</span>
+        <button class="btn-sm" onclick="exportData()">⬇ Export</button>
+        <button class="btn-sm primary" onclick="shareProgress()">Share</button>
+      </div>
+
+      <div id="tipsContainer">
+        <div class="empty-state">
+          <span class="big-icon">🌍</span>
+          <h3>Select a category</h3>
+          <p>Pick a topic on the left to explore energy-saving tips</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Celebration modal -->
+<div class="celebration" id="celebration">
+  <div class="celebration-box">
+    <span class="big">🎉</span>
+    <h2 id="celebTitle">Category Complete!</h2>
+    <p id="celebMsg">You've completed all tips in this category.</p>
+    <button class="close-celebration" onclick="closeCelebration()">Awesome! Keep going →</button>
+  </div>
+</div>
+<canvas id="confettiCanvas"></canvas>
+
+<script>
+// ─── Data ────────────────────────────────────────────────────────────────────
+const CATEGORIES = {
+  lighting:   { icon: '💡', label: 'Lighting' },
+  appliances: { icon: '⚙️', label: 'Appliances' },
+  transport:  { icon: '🚴', label: 'Transport' },
+  water:      { icon: '💧', label: 'Water Use' },
+  cooking:    { icon: '🍳', label: 'Cooking' },
+  heating:    { icon: '🌡️', label: 'Heating/Cooling' }
+};
+
+const TIPS = {
+  lighting: [
+    { id:'l1', icon:'💡', text:'Switch to LED bulbs — they use 75% less energy than incandescent bulbs', impact:'high', co2: 0.3 },
+    { id:'l2', icon:'🌙', text:'Turn off lights when leaving a room for more than 15 minutes', impact:'med', co2: 0.1 },
+    { id:'l3', icon:'☀️', text:'Maximise natural daylight by keeping blinds open during daytime', impact:'low', co2: 0.05 },
+    { id:'l4', icon:'🔌', text:'Install dimmer switches to adjust lighting levels and save energy', impact:'med', co2: 0.15 },
+  ],
+  appliances: [
+    { id:'a1', icon:'🔌', text:'Unplug chargers and devices when not in use to avoid phantom power drain', impact:'high', co2: 0.4 },
+    { id:'a2', icon:'⭐', text:'Choose ENERGY STAR certified appliances for maximum efficiency', impact:'high', co2: 0.6 },
+    { id:'a3', icon:'🧊', text:'Keep fridge at 37–40°F and freezer at 0–5°F for optimal efficiency', impact:'med', co2: 0.2 },
+    { id:'a4', icon:'🧺', text:'Wash clothes in cold water and air dry when possible', impact:'high', co2: 0.5 },
+  ],
+  transport: [
+    { id:'t1', icon:'🚴', text:'Walk or cycle for short trips under 2 km instead of driving', impact:'high', co2: 0.8 },
+    { id:'t2', icon:'🚌', text:'Use public transportation to cut your commute carbon footprint', impact:'high', co2: 1.0 },
+    { id:'t3', icon:'🚗', text:'Carpool with colleagues or friends to save fuel and reduce emissions', impact:'high', co2: 0.9 },
+    { id:'t4', icon:'🚙', text:'Maintain proper tyre pressure to improve fuel efficiency by up to 3%', impact:'med', co2: 0.3 },
+  ],
+  water: [
+    { id:'w1', icon:'🚿', text:'Take shorter showers (5–7 minutes) to save water and water-heating energy', impact:'high', co2: 0.35 },
+    { id:'w2', icon:'🚰', text:'Fix leaky faucets — a drip per second wastes 3,000 gallons per year', impact:'high', co2: 0.4 },
+    { id:'w3', icon:'🍽️', text:'Run dishwashers only when fully loaded to minimise water and energy use', impact:'med', co2: 0.2 },
+    { id:'w4', icon:'🌱', text:'Collect rainwater for watering plants and garden beds', impact:'low', co2: 0.08 },
+  ],
+  cooking: [
+    { id:'c1', icon:'🍳', text:'Use lids on pots and pans to cook food faster and save energy', impact:'med', co2: 0.15 },
+    { id:'c2', icon:'🔥', text:'Match pot size to burner size for maximum thermal efficiency', impact:'med', co2: 0.12 },
+    { id:'c3', icon:'📦', text:'Use microwave or toaster oven for small meals instead of the full oven', impact:'high', co2: 0.3 },
+    { id:'c4', icon:'♨️', text:'Keep oven door closed while cooking — opening it wastes 25% of heat', impact:'med', co2: 0.18 },
+  ],
+  heating: [
+    { id:'h1', icon:'🌡️', text:'Set thermostat to 68°F in winter and 78°F in summer to optimise usage', impact:'high', co2: 0.7 },
+    { id:'h2', icon:'🪟', text:'Seal windows and doors to prevent costly air leaks and drafts', impact:'high', co2: 0.65 },
+    { id:'h3', icon:'🧊', text:'Use ceiling fans to circulate air and reduce AC load in summer', impact:'med', co2: 0.25 },
+    { id:'h4', icon:'🧥', text:'Layer clothing in winter before reaching for the thermostat', impact:'low', co2: 0.1 },
+  ]
+};
+
+const ALL_TIPS = Object.values(TIPS).flat();
+const TOTAL_TIPS = ALL_TIPS.length;
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let state = {
+  completed: new Set(),
+  favorites: new Set(),
+  activeCategory: null,
+  currentTab: 'browse',
+  searchQuery: '',
+  streak: 0,
+  lastActiveDate: null,
+};
+
+// Load from localStorage
+try {
+  const saved = JSON.parse(localStorage.getItem('ecotrack') || '{}');
+  if (saved.completed) state.completed = new Set(saved.completed);
+  if (saved.favorites) state.favorites = new Set(saved.favorites);
+  if (saved.streak) state.streak = saved.streak;
+  if (saved.lastActiveDate) state.lastActiveDate = saved.lastActiveDate;
+} catch(e) {}
+
+// ─── Persistence ─────────────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem('ecotrack', JSON.stringify({
+    completed: [...state.completed],
+    favorites: [...state.favorites],
+    streak: state.streak,
+    lastActiveDate: state.lastActiveDate,
+  }));
+}
+
+// ─── Streak logic ─────────────────────────────────────────────────────────────
+function updateStreak() {
+  const today = new Date().toDateString();
+  if (state.lastActiveDate === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  state.streak = state.lastActiveDate === yesterday ? state.streak + 1 : 1;
+  state.lastActiveDate = today;
+  save();
+}
+
+// ─── CO2 calculation ─────────────────────────────────────────────────────────
+function calcCO2() {
+  return ALL_TIPS
+    .filter(t => state.completed.has(t.id))
+    .reduce((sum, t) => sum + (t.co2 || 0), 0)
+    .toFixed(2);
+}
+
+function calcImpactScore() {
+  const impactMap = { high: 3, med: 2, low: 1 };
+  return ALL_TIPS
+    .filter(t => state.completed.has(t.id))
+    .reduce((sum, t) => sum + (impactMap[t.impact] || 0), 0);
+}
+
+// ─── Render category nav ──────────────────────────────────────────────────────
+function renderNav() {
+  const nav = document.getElementById('catNav');
+  nav.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => {
+    const tips = TIPS[key];
+    const done = tips.filter(t => state.completed.has(t.id)).length;
+    const allDone = done === tips.length;
+    return `
+      <button
+        class="cat-btn${state.activeCategory === key ? ' active' : ''}${allDone ? ' completed' : ''}"
+        onclick="selectCategory('${key}')"
+      >
+        <span class="cat-icon">${cat.icon}</span>
+        <span>${cat.label}</span>
+        <span class="badge">${done}/${tips.length}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+// ─── Render tips ──────────────────────────────────────────────────────────────
+function renderTips() {
+  const container = document.getElementById('tipsContainer');
+
+  let tips = [];
+
+  if (state.searchQuery.trim()) {
+    const q = state.searchQuery.toLowerCase();
+    tips = ALL_TIPS.filter(t => t.text.toLowerCase().includes(q));
+    document.getElementById('searchCount').textContent = `${tips.length} result${tips.length !== 1 ? 's' : ''}`;
+  } else {
+    document.getElementById('searchCount').textContent = '';
+
+    if (state.currentTab === 'favorites') {
+      tips = ALL_TIPS.filter(t => state.favorites.has(t.id));
+    } else if (state.currentTab === 'completed') {
+      tips = ALL_TIPS.filter(t => state.completed.has(t.id));
+    } else {
+      tips = state.activeCategory ? TIPS[state.activeCategory] : [];
+    }
+  }
+
+  if (tips.length === 0) {
+    if (state.currentTab === 'favorites' && !state.searchQuery) {
+      container.innerHTML = `<div class="empty-state">
+        <span class="big-icon">⭐</span>
+        <h3>No favourites yet</h3>
+        <p>Click the star (⭐) on any tip to save it here</p>
+      </div>`;
+    } else if (state.currentTab === 'completed' && !state.searchQuery) {
+      container.innerHTML = `<div class="empty-state">
+        <span class="big-icon">✅</span>
+        <h3>Nothing completed yet</h3>
+        <p>Tick off tips to track your progress</p>
+      </div>`;
+    } else if (state.searchQuery) {
+      container.innerHTML = `<div class="empty-state">
+        <span class="big-icon">🔍</span>
+        <h3>No results</h3>
+        <p>Try a different search term</p>
+      </div>`;
+    } else {
+      container.innerHTML = `<div class="empty-state">
+        <span class="big-icon">🌍</span>
+        <h3>Select a category</h3>
+        <p>Pick a topic on the left to explore energy-saving tips</p>
+      </div>`;
+    }
+    return;
+  }
+
+  const impactLabel = { high: '🔴 High Impact', med: '🟡 Med Impact', low: '🔵 Low Impact' };
+
+  // Show Complete All / Reset bar when browsing a category
+  let topBar = '';
+  if (state.activeCategory && !state.searchQuery) {
+    const catTips = TIPS[state.activeCategory];
+    const doneCnt = catTips.filter(t => state.completed.has(t.id)).length;
+    const allDone = doneCnt === catTips.length;
+    topBar = `
+      <div class="complete-all-bar">
+        <span>${doneCnt} of ${catTips.length} tips completed in this category</span>
+        <div style="display:flex;gap:8px">
+          ${!allDone ? `<button class="complete-all-btn" onclick="completeAll('${state.activeCategory}')">✅ Complete All</button>` : ''}
+          ${doneCnt > 0 ? `<button class="reset-cat-btn" onclick="resetCategory('${state.activeCategory}')">↺ Reset</button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = topBar + tips.map((t, i) => `
+    <div class="tip-card${state.completed.has(t.id) ? ' done' : ''}" style="animation-delay:${i*0.06}s" id="tip-${t.id}">
+      <div class="tip-icon-wrap">${t.icon}</div>
+      <div class="tip-body">
+        <div class="tip-text">${t.text}</div>
+        <div class="tip-meta">
+          <span class="impact-tag impact-${t.impact}">${impactLabel[t.impact]}</span>
+          <span class="co2-tag">~${t.co2} kg CO₂/month</span>
+          <span class="co2-tag" style="cursor:pointer;color:${state.favorites.has(t.id)?'#ffa657':'var(--text-muted)'}"
+            onclick="toggleFav('${t.id}')" title="${state.favorites.has(t.id) ? 'Unfavourite' : 'Favourite'}">⭐</span>
+        </div>
+      </div>
+      <div class="tip-actions">
+        <button class="complete-btn" onclick="toggleDone('${t.id}')">
+          ${state.completed.has(t.id) ? '✅ Done!' : '○ Mark Done'}
+        </button>
+        ${state.completed.has(t.id) ? `<button class="undo-btn" onclick="toggleDone('${t.id}')">undo</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function selectCategory(key) {
+  state.activeCategory = key;
+  state.currentTab = 'browse';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab').classList.add('active');
+  renderNav();
+  renderTips();
+}
+
+function toggleDone(id) {
+  const wasCompleted = state.completed.has(id);
+  if (wasCompleted) {
+    state.completed.delete(id);
+    showToast('↩ Tip unmarked');
+  } else {
+    state.completed.add(id);
+    updateStreak();
+    showToast('✅ Tip marked as done! Keep it up!');
+
+    // Check if category is fully done
+    const cat = Object.entries(TIPS).find(([, tips]) => tips.some(t => t.id === id));
+    if (cat) {
+      const [catKey, catTips] = cat;
+      if (catTips.every(t => state.completed.has(t.id))) {
+        setTimeout(() => showCelebration(catKey), 400);
+      }
+    }
+  }
+  save();
+  updateStats();
+  renderNav();
+  renderTips();
+}
+
+function completeAll(catKey) {
+  const catTips = TIPS[catKey];
+  catTips.forEach(t => state.completed.add(t.id));
+  updateStreak();
+  save();
+  updateStats();
+  renderNav();
+  renderTips();
+  setTimeout(() => showCelebration(catKey), 300);
+}
+
+function resetCategory(catKey) {
+  TIPS[catKey].forEach(t => state.completed.delete(t.id));
+  save();
+  updateStats();
+  renderNav();
+  renderTips();
+  showToast('↺ Category reset');
+}
+
+// ─── Celebration & Confetti ───────────────────────────────────────────────────
+function showCelebration(catKey) {
+  const cat = CATEGORIES[catKey];
+  document.getElementById('celebTitle').textContent = `${cat.icon} ${cat.label} Complete!`;
+  const tips = TIPS[catKey];
+  const totalCO2 = tips.reduce((s,t)=>s+t.co2,0).toFixed(2);
+  document.getElementById('celebMsg').textContent =
+    `You've completed all ${tips.length} tips — saving ~${totalCO2} kg CO₂/month from this category alone!`;
+  document.getElementById('celebration').classList.add('show');
+  launchConfetti();
+}
+
+function closeCelebration() {
+  document.getElementById('celebration').classList.remove('show');
+  stopConfetti();
+}
+
+let confettiAnimId;
+let confettiParticles = [];
+
+function launchConfetti() {
+  const canvas = document.getElementById('confettiCanvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#39d353','#58a6ff','#ffa657','#f78166','#bc8cff','#ffffff'];
+  confettiParticles = Array.from({length: 120}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * -canvas.height,
+    r: Math.random() * 8 + 4,
+    d: Math.random() * 120 + 20,
+    color: colors[Math.floor(Math.random()*colors.length)],
+    tilt: Math.random() * 10 - 10,
+    tiltAngle: 0,
+    tiltSpeed: Math.random() * 0.1 + 0.05,
+  }));
+
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confettiParticles.forEach(p => {
+      p.tiltAngle += p.tiltSpeed;
+      p.y += (Math.cos(p.d) + 2.5);
+      p.x += Math.sin(p.tiltAngle) * 1.5;
+      p.tilt = Math.sin(p.tiltAngle) * 12;
+      ctx.beginPath();
+      ctx.lineWidth = p.r;
+      ctx.strokeStyle = p.color;
+      ctx.moveTo(p.x + p.tilt + p.r/3, p.y);
+      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r/5);
+      ctx.stroke();
+    });
+    confettiParticles = confettiParticles.filter(p => p.y < canvas.height + 20);
+    if (confettiParticles.length > 0) confettiAnimId = requestAnimationFrame(draw);
+    else stopConfetti();
+  }
+  draw();
+}
+
+function stopConfetti() {
+  cancelAnimationFrame(confettiAnimId);
+  const canvas = document.getElementById('confettiCanvas');
+  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+}
+
+function toggleFav(id) {
+  if (state.favorites.has(id)) {
+    state.favorites.delete(id);
+    showToast('Removed from favourites');
+  } else {
+    state.favorites.add(id);
+    showToast('⭐ Added to favourites!');
+  }
+  save();
+  renderTips();
+}
+
+function setTab(tab) {
+  state.currentTab = tab;
+  if (tab !== 'browse') state.activeCategory = null;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderNav();
+  renderTips();
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const done = state.completed.size;
+  const pct = Math.round(done / TOTAL_TIPS * 100);
+  const categoriesCompleted = Object.entries(TIPS).filter(([k, tips]) =>
+    tips.every(t => state.completed.has(t.id))
+  ).length;
+
+  document.getElementById('completedCount').textContent = done;
+  document.getElementById('categoriesCount').textContent = categoriesCompleted;
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('impactScore').textContent = calcImpactScore();
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${done} / ${TOTAL_TIPS}`;
+  document.getElementById('co2Display').textContent = calcCO2();
+  document.getElementById('streakDays').textContent = state.streak;
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimeout;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+function exportData() {
+  const completed = ALL_TIPS.filter(t => state.completed.has(t.id));
+  const lines = [
+    'EcoTrack — My Completed Tips',
+    `Exported: ${new Date().toLocaleDateString()}`,
+    `CO₂ saved: ${calcCO2()} kg/month`,
+    `Impact score: ${calcImpactScore()}`,
+    '',
+    ...completed.map(t => `[${t.impact.toUpperCase()}] ${t.text}`)
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ecotrack-progress.txt';
+  a.click();
+  showToast('📥 Progress exported!');
+}
+
+function shareProgress() {
+  const text = `🌍 I've completed ${state.completed.size}/${TOTAL_TIPS} EcoTrack tips and saved ~${calcCO2()} kg CO₂/month! #EcoTrack`;
+  if (navigator.share) {
+    navigator.share({ text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('📋 Copied to clipboard!'));
+  }
+}
+
+// ─── Search ───────────────────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', e => {
+  state.searchQuery = e.target.value;
+  state.activeCategory = null;
+  renderNav();
+  renderTips();
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderNav();
+renderTips();
+updateStats();
+</script>
+</body>
+</html>

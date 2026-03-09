@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoTrack — Energy Saving Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+--bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+--green:#39d353;--green-dim:#196127;--green-glow:rgba(57,211,83,.15);
+--text:#e6edf3;--text-muted:#7d8590;--accent:#58a6ff;
+--warn:#f78166;--gold:#ffa657;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+background:var(--bg);color:var(--text);
+font-family:'DM Sans',sans-serif;
+min-height:100vh;padding:24px;
+display:flex;justify-content:center;
+}
+.app{max-width:960px;width:100%;display:flex;flex-direction:column;gap:20px}
+
+/* HEADER */
+header{
+display:flex;align-items:center;justify-content:space-between;
+padding:20px 28px;background:var(--surface);
+border:1px solid var(--border);border-radius:14px;
+}
+.logo{
+font-family:'Space Mono',monospace;
+font-size:1.3rem;font-weight:700;color:var(--green);
+display:flex;align-items:center;gap:10px;
+}
+.logo-dot{
+width:10px;height:10px;background:var(--green);
+border-radius:50%;box-shadow:0 0 12px var(--green);
+animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.header-right{display:flex;gap:16px}
+.streak-badge,.co2-saved{
+display:flex;align-items:center;gap:6px;
+padding:6px 14px;border-radius:20px;
+font:.85rem 'Space Mono',monospace;font-weight:600;
+}
+.streak-badge{
+background:rgba(255,166,87,.1);
+border:1px solid rgba(255,166,87,.3);
+color:var(--gold);
+}
+.co2-saved{
+background:var(--green-glow);
+border:1px solid var(--green-dim);
+color:var(--green);
+}
+
+/* SEARCH */
+.search-bar{position:relative}
+.search-bar input{
+width:100%;background:var(--surface);
+border:1px solid var(--border);
+border-radius:10px;
+padding:14px 20px 14px 48px;
+color:var(--text);font-size:1rem;outline:none;
+}
+.search-bar input:focus{border-color:var(--accent)}
+.search-icon{
+position:absolute;left:16px;top:50%;
+transform:translateY(-50%);
+color:var(--text-muted)
+}
+.search-results-count{
+position:absolute;right:16px;top:50%;
+transform:translateY(-50%);
+font:.8rem 'Space Mono',monospace;
+color:var(--text-muted);
+}
+
+/* STATS */
+.stats-bar{
+display:grid;grid-template-columns:repeat(4,1fr);gap:12px
+}
+.stat-card{
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:12px;
+padding:18px 20px;text-align:center;
+}
+.stat-card .num{
+font:700 2rem 'Space Mono',monospace;
+color:var(--green)
+}
+.stat-card .lbl{
+font-size:.78rem;margin-top:6px;
+color:var(--text-muted);
+text-transform:uppercase;
+}
+.accent .num{color:var(--accent)}
+.gold .num{color:var(--gold)}
+.warn .num{color:var(--warn)}
+
+/* LAYOUT */
+.main{
+display:grid;
+grid-template-columns:220px 1fr;
+gap:20px
+}
+
+/* CATEGORY */
+.category-nav{display:flex;flex-direction:column;gap:6px}
+.cat-btn{
+display:flex;align-items:center;gap:12px;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:10px;padding:13px 16px;
+color:var(--text-muted);
+cursor:pointer;width:100%;
+}
+.cat-btn:hover{
+background:var(--surface2);color:var(--text)
+}
+.cat-btn.active{
+background:var(--green-glow);
+border-color:var(--green-dim);
+color:var(--green)
+}
+.badge{
+margin-left:auto;background:var(--surface2);
+border-radius:10px;padding:2px 8px;
+font:.72rem 'Space Mono',monospace;
+}
+
+/* TIPS */
+.tips-panel{display:flex;flex-direction:column;gap:12px}
+.tip-card{
+display:flex;gap:16px;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:12px;padding:18px 20px;
+transition:.2s;
+}
+.tip-card:hover{transform:translateX(4px)}
+.tip-card.done{
+background:var(--green-glow);
+border-color:var(--green-dim)
+}
+.tip-icon-wrap{
+width:44px;height:44px;
+background:var(--surface2);
+border-radius:10px;
+display:flex;align-items:center;justify-content:center;
+font-size:1.4rem;
+}
+.tip-text{line-height:1.6;font-size:.93rem}
+.tip-meta{
+display:flex;gap:10px;margin-top:8px;
+font-size:.73rem
+}
+.impact-tag{
+padding:3px 9px;border-radius:6px;
+font-family:'Space Mono',monospace;font-weight:700
+}
+.impact-high{background:rgba(247,129,102,.15);color:var(--warn)}
+.impact-med{background:rgba(255,166,87,.15);color:var(--gold)}
+.impact-low{background:rgba(88,166,255,.15);color:var(--accent)}
+
+.complete-btn{
+padding:8px 16px;border-radius:8px;
+border:1px solid var(--border);
+background:var(--surface2);
+cursor:pointer;font-weight:600;
+}
+.complete-btn:hover{
+background:var(--green-glow);
+border-color:var(--green);
+color:var(--green)
+}
+
+/* PROGRESS */
+.progress-wrap{
+display:flex;align-items:center;gap:14px;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:12px;padding:16px 20px;
+}
+.progress-track{
+flex:1;height:6px;
+background:var(--surface2);
+border-radius:3px;overflow:hidden;
+}
+.progress-fill{
+height:100%;background:var(--green);
+width:0%;transition:.5s;
+}
+
+/* EMPTY */
+.empty-state{
+background:var(--surface);
+border:1px dashed var(--border);
+border-radius:12px;
+padding:60px;text-align:center;
+color:var(--text-muted)
+}
+
+/* TOAST */
+.toast{
+position:fixed;bottom:28px;right:28px;
+background:var(--surface);
+border:1px solid var(--green-dim);
+padding:14px 20px;border-radius:10px;
+font:.88rem 'Space Mono',monospace;
+transform:translateY(80px);opacity:0;
+transition:.3s;
+}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+.main{grid-template-columns:1fr}
+.stats-bar{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+<div class="logo"><div class="logo-dot"></div>EcoTrack</div>
+<div class="header-right">
+<div class="streak-badge">🔥 <span id="streakDays">0</span></div>
+<div class="co2-saved">🌿 <span id="co2Display">0</span></div>
+</div>
+</header>
+
+<div class="search-bar">
+<span class="search-icon">🔍</span>
+<input id="searchInput" placeholder="Search tips...">
+<span id="searchCount" class="search-results-count"></span>
+</div>
+
+<div class="stats-bar">
+<div class="stat-card"><div id="completedCount" class="num">0</div><div class="lbl">Completed</div></div>
+<div class="stat-card accent"><div id="categoriesCount" class="num">0</div><div class="lbl">Categories</div></div>
+<div class="stat-card gold"><div id="progressPct" class="num">0%</div><div class="lbl">Progress</div></div>
+<div class="stat-card warn"><div id="impactScore" class="num">0</div><div class="lbl">Impact</div></div>
+</div>
+
+<div class="main">
+<div id="catNav" class="category-nav"></div>
+<div class="tips-panel">
+<div id="tipsContainer" class="empty-state">Select a category</div>
+</div>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const CATEGORIES={
+lighting:{icon:'💡',label:'Lighting'},
+appliances:{icon:'⚙️',label:'Appliances'},
+transport:{icon:'🚴',label:'Transport'}
+};
+
+const TIPS={
+lighting:[
+{id:'l1',text:'Switch to LED bulbs',impact:'high',co2:.3},
+{id:'l2',text:'Turn off unused lights',impact:'med',co2:.1}
+],
+appliances:[
+{id:'a1',text:'Unplug idle devices',impact:'high',co2:.4}
+],
+transport:[
+{id:'t1',text:'Walk for short trips',impact:'high',co2:.8}
+]
+};
+
+let state={completed:new Set(),activeCategory:null};
+
+/* NAV */
+function renderNav(){
+catNav.innerHTML=Object.entries(CATEGORIES).map(([k,c])=>
+`<button class="cat-btn" onclick="selectCategory('${k}')">${c.icon} ${c.label}</button>`
+).join('');
+}
+
+/* TIPS */
+function renderTips(){
+if(!state.activeCategory){
+tipsContainer.innerHTML='Select a category';return;
+}
+tipsContainer.innerHTML=TIPS[state.activeCategory].map(t=>
+`<div class="tip-card ${state.completed.has(t.id)?'done':''}">
+<div class="tip-icon-wrap">${CATEGORIES[state.activeCategory].icon}</div>
+<div>
+<div class="tip-text">${t.text}</div>
+<button class="complete-btn" onclick="toggleDone('${t.id}')">
+${state.completed.has(t.id)?'Done':'Mark Done'}
+</button>
+</div>
+</div>`
+).join('');
+}
+
+/* ACTIONS */
+function selectCategory(k){
+state.activeCategory=k;renderTips();
+}
+
+function toggleDone(id){
+state.completed.has(id)?state.completed.delete(id):state.completed.add(id);
+updateStats();renderTips();toast('Updated');
+}
+
+/* STATS */
+function updateStats(){
+completedCount.textContent=state.completed.size;
+}
+
+/* TOAST */
+function toast(msg){
+toastEl=toast;
+toastEl.textContent=msg;
+toastEl.classList.add('show');
+setTimeout(()=>toastEl.classList.remove('show'),2000);
+}
+
+/* INIT */
+renderNav();
+updateStats();
+</script>
+</body>
+</html>
